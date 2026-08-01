@@ -1,0 +1,33 @@
+{
+  "updated_at": "2026-08-01 11:00:00",
+  "active": [
+    {
+      "title": "Fallo en el sistema de pagos",
+      "url": "https://github.com/Leuros88/Monitor/issues/1",
+      "created_at": "2026-08-01 10:30:00",
+      "body": "Estamos experimentando intermitencias en la pasarela de pagos principal.",
+      "comments": [
+        {
+          "user": "Leuros88",
+          "created_at": "2026-08-01 10:45:00",
+          "body": "El proveedor upstream está revisando los servidores."
+        }
+      ]
+    }
+  ],
+  "history": [
+    {
+      "title": "Mantenimiento programado de base de datos",
+      "url": "https://github.com/Leuros88/Monitor/issues/2",
+      "created_at": "2026-07-28 02:00:00",
+      "body": "Se realizará una optimización general de las bases de datos de Orion.",
+      "comments": [
+        {
+          "user": "Leuros88",
+          "created_at": "2026-07-28 03:15:00",
+          "body": "Mantenimiento finalizado con éxito sin pérdida de datos."
+        }
+      ]
+    }
+  ]
+}
