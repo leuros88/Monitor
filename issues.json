@@ -1,19 +1,5 @@
 {
-  "updated_at": "5:04:18 PM (8/1/2026)",
+  "updated_at": "6:03:49 PM (8/1/2026)",
   "active": [],
-  "history": [
-    {
-      "title": "Test",
-      "url": "https://github.com/leuros88/Monitor/issues/5",
-      "created_at": "Aug 1, 2026, 4:51 PM",
-      "body": "I am adding a new system. Ignore this message. Sorry for the inconvenience.",
-      "comments": [
-        {
-          "user": "leuros88",
-          "created_at": "Aug 1, 2026, 5:02 PM",
-          "body": "test"
-        }
-      ]
-    }
-  ]
+  "history": []
 }
