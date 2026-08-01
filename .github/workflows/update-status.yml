@@ -1,0 +1,107 @@
+name: Update Status Monitor
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+  issue_comment:
+    types: [created, edited, deleted]
+  workflow_dispatch:
+
+jobs:
+  build-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch Issues and Generate JSON
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          REPO_OWNER: "Leuros88"
+          REPO_NAME: "Monitor"
+          TARGET_LABEL: "global-alert"
+          ALLOWED_USER: "Leuros88"
+        run: |
+          ISSUES_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/issues?labels=$TARGET_LABEL&state=all&sort=created&direction=desc"
+          
+          # Descargar issues usando el token secreto
+          RAW_ISSUES=$(curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ISSUES_URL")
+          export RAW_ISSUES
+
+          # Procesar con Node.js integrado en el runner
+          node -e '
+            const fs = require("fs");
+            const raw = JSON.parse(process.env.RAW_ISSUES || "[]");
+            const allowedUser = process.env.ALLOWED_USER;
+            const token = process.env.GITHUB_TOKEN;
+
+            async function processData() {
+              const active = [];
+              const history = [];
+
+              if (!Array.isArray(raw)) {
+                console.error("Error fetching issues:", raw);
+                process.exit(1);
+              }
+
+              for (const issue of raw) {
+                if (issue.pull_request) continue;
+
+                // Obtener comentarios del issue mediante la API de GitHub usando el token
+                let commentsJson = [];
+                try {
+                  const commRes = await fetch(issue.comments_url, {
+                    headers: { 
+                      "Authorization": "token " + token, 
+                      "Accept": "application/vnd.github.v3+json" 
+                    }
+                  });
+                  if (commRes.ok) {
+                    commentsJson = await commRes.json();
+                  }
+                } catch (e) {
+                  console.error("Failed to fetch comments for issue", issue.number);
+                }
+
+                // Filtrar comentarios para mostrar solo los del usuario autorizado (Leuros88)
+                const filteredComments = (Array.isArray(commentsJson) ? commentsJson : [])
+                  .filter(c => c.user && c.user.login.toLowerCase() === allowedUser.toLowerCase())
+                  .map(c => ({
+                    user: c.user.login,
+                    created_at: new Date(c.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+                    body: c.body
+                  }));
+
+                const issueObj = {
+                  title: issue.title,
+                  url: issue.html_url,
+                  created_at: new Date(issue.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+                  body: issue.body || "",
+                  comments: filteredComments
+                };
+
+                if (issue.state === "open") {
+                  active.push(issueObj);
+                } else {
+                  history.push(issueObj);
+                }
+              }
+
+              const finalData = {
+                updated_at: new Date().toLocaleTimeString("en-US", { timeStyle: "medium" }) + " (" + new Date().toLocaleDateString() + ")",
+                active,
+                history
+              };
+
+              fs.writeFileSync("issues.json", JSON.stringify(finalData, null, 2));
+            }
+
+            processData();
+          '
+
+      - name: Commit and push changes if issues.json updated
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add issues.json
+          git diff --staged --quiet || (git commit -m "Auto-update status JSON from issues" && git push)
