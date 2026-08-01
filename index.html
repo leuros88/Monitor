@@ -16,6 +16,7 @@
             --accent-yellow: #f59e0b;
             --accent-red: #ef4444;
             --border-color: #334155;
+            --comment-bg: #0f172a;
         }
 
         * {
@@ -157,6 +158,38 @@
             font-size: 0.95rem;
             color: var(--text-secondary);
             white-space: pre-line;
+            margin-bottom: 15px;
+        }
+
+        /* Estilos para los comentarios / respuestas del issue */
+        .comments-section {
+            margin-top: 15px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .comment-item {
+            background-color: var(--comment-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .comment-body {
+            color: var(--text-primary);
+            white-space: pre-line;
         }
 
         .loading, .no-incidents {
@@ -175,7 +208,6 @@
         <!-- Header with Logo -->
         <header>
             <div class="logo-area">
-                <!-- Change 'tu-logo.png' to your actual logo file name -->
                 <img src="tu-logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
                 <h1>Service Status</h1>
             </div>
@@ -210,7 +242,7 @@
         const REPO_OWNER = 'Leuros88';
         const REPO_NAME = 'Monitor';
         const LABEL = 'global-alert';
-        const GITHUB_TOKEN = ''; // Optional: Add a Personal Access Token if the repo is private ('ghp_xxx')
+        const GITHUB_TOKEN = ''; // Optional: Add a Personal Access Token if the repo is private
 
         async function fetchIssues() {
             const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues?labels=${LABEL}&state=all&sort=created&direction=desc`;
@@ -226,7 +258,20 @@
                 const response = await fetch(url, { headers });
                 if (!response.ok) throw new Error('Failed to connect to GitHub API');
                 const issues = await response.json();
-                processIssues(issues);
+                
+                // Obtener los comentarios para cada issue de forma asíncrona
+                const issuesWithComments = await Promise.all(issues.map(async (issue) => {
+                    const commentsUrl = issue.comments_url;
+                    try {
+                        const commResponse = await fetch(commentsUrl, { headers });
+                        const comments = commResponse.ok ? await commResponse.json() : [];
+                        return { ...issue, resolvedComments: comments };
+                    } catch (e) {
+                        return { ...issue, resolvedComments: [] };
+                    }
+                }));
+
+                processIssues(issuesWithComments);
             } catch (error) {
                 console.error(error);
                 document.getElementById('active-incidents').innerHTML = `<div class="no-incidents">Failed to load monitor data.</div>`;
@@ -235,19 +280,16 @@
         }
 
         function processIssues(issues) {
-            // Filter out pull requests (GitHub API returns PRs as issues sometimes)
             const realIssues = issues.filter(issue => !issue.pull_request);
 
             const activeContainer = document.getElementById('active-incidents');
             const historyContainer = document.getElementById('historical-incidents');
-            const statusBanner = document.getElementById('global-status-banner');
             const statusDot = document.getElementById('status-dot');
             const statusText = document.getElementById('status-text');
 
             const active = realIssues.filter(i => i.state === 'open');
             const closed = realIssues.filter(i => i.state === 'closed');
 
-            // Update Global Banner
             if (active.length > 0) {
                 statusDot.className = 'status-indicator disrupted';
                 statusText.textContent = `Attention: There are ${active.length} active global alert(s) reported.`;
@@ -256,19 +298,13 @@
                 statusText.textContent = 'All Systems Operational';
             }
 
-            // Render Active
-            if (active.length === 0) {
-                activeContainer.innerHTML = `<div class="no-incidents">No active incidents at this time. All systems normal!</div>`;
-            } else {
-                activeContainer.innerHTML = active.map(i => createCardHTML(i)).join('');
-            }
+            activeContainer.innerHTML = active.length === 0 
+                ? `<div class="no-incidents">No active incidents at this time. All systems normal!</div>` 
+                : active.map(i => createCardHTML(i)).join('');
 
-            // Render History
-            if (closed.length === 0) {
-                historyContainer.innerHTML = `<div class="no-incidents">No past incidents recorded in history.</div>`;
-            } else {
-                historyContainer.innerHTML = closed.map(i => createCardHTML(i)).join('');
-            }
+            historyContainer.innerHTML = closed.length === 0 
+                ? `<div class="no-incidents">No past incidents recorded in history.</div>` 
+                : closed.map(i => createCardHTML(i)).join('');
 
             document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
         }
@@ -285,6 +321,33 @@
 
             const bodyText = issue.body ? escapeHTML(issue.body) : 'No detailed description provided.';
 
+            // Generar HTML para las respuestas / comentarios del issue
+            let commentsHTML = '';
+            if (issue.resolvedComments && issue.resolvedComments.length > 0) {
+                const commentCards = issue.resolvedComments.map(comment => {
+                    const commentDate = new Date(comment.created_at).toLocaleString('en-US', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short'
+                    });
+                    return `
+                        <div class="comment-item">
+                            <div class="comment-header">
+                                <span><strong>${escapeHTML(comment.user.login)}</strong></span>
+                                <span>${commentDate}</span>
+                            </div>
+                            <div class="comment-body">${escapeHTML(comment.body)}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                commentsHTML = `
+                    <div class="comments-section">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Updates / Responses:</div>
+                        ${commentCards}
+                    </div>
+                `;
+            }
+
             return `
                 <div class="incident-card">
                     <div class="incident-header">
@@ -293,6 +356,7 @@
                     </div>
                     <div class="incident-date">Created on: ${date}</div>
                     <div class="incident-body">${bodyText}</div>
+                    ${commentsHTML}
                 </div>
             `;
         }
@@ -303,7 +367,6 @@
             );
         }
 
-        // Run on load and refresh every 5 minutes
         fetchIssues();
         setInterval(fetchIssues, 300000);
     </script>
