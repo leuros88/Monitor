@@ -233,7 +233,6 @@
     <script>
         async function loadStatus() {
             try {
-                // Lee el archivo issues.json localmente sin restricciones de API
                 const response = await fetch('issues.json?t=' + new Date().getTime());
                 if (!response.ok) throw new Error('Could not load issues data.');
                 const data = await response.json();
@@ -254,7 +253,6 @@
             const active = data.active || [];
             const history = data.history || [];
 
-            // Banner global
             if (active.length > 0) {
                 statusDot.className = 'status-indicator disrupted';
                 statusText.textContent = `Attention: There are ${active.length} active global alert(s) reported.`;
@@ -263,12 +261,10 @@
                 statusText.textContent = 'All Systems Operational';
             }
 
-            // Activas
             activeContainer.innerHTML = active.length === 0 
                 ? `<div class="no-incidents">No active incidents at this time. All systems normal!</div>` 
                 : active.map(i => createCardHTML(i, 'open')).join('');
 
-            // Historial
             historyContainer.innerHTML = history.length === 0 
                 ? `<div class="no-incidents">No past incidents recorded in history.</div>` 
                 : history.map(i => createCardHTML(i, 'closed')).join('');
