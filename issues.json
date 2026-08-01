@@ -1,39 +1,5 @@
 {
-  "updated_at": "9:30:11 AM (8/1/2026)",
+  "updated_at": "10:47:17 AM (8/1/2026)",
   "active": [],
-  "history": [
-    {
-      "title": "test test",
-      "url": "https://github.com/leuros88/Monitor/issues/3",
-      "created_at": "Aug 1, 2026, 8:25 AM",
-      "body": "test hello",
-      "comments": [
-        {
-          "user": "leuros88",
-          "created_at": "Aug 1, 2026, 8:31 AM",
-          "body": "xd"
-        }
-      ]
-    },
-    {
-      "title": "Test",
-      "url": "https://github.com/leuros88/Monitor/issues/2",
-      "created_at": "Jul 31, 2026, 9:42 PM",
-      "body": "This is only a test.",
-      "comments": [
-        {
-          "user": "leuros88",
-          "created_at": "Jul 31, 2026, 9:47 PM",
-          "body": "no"
-        }
-      ]
-    },
-    {
-      "title": "test",
-      "url": "https://github.com/leuros88/Monitor/issues/1",
-      "created_at": "Jul 31, 2026, 6:42 PM",
-      "body": "test",
-      "comments": []
-    }
-  ]
+  "history": []
 }
