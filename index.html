@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado del Sistema - Monitor Global</title>
+    <!-- Fuentes y Estilos Modernos -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Banner de Estado General */
+        .status-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .operational { background-color: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+        .disrupted { background-color: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }
+
+        /* Secciones */
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .incident-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .incident-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .incident-card:hover {
+            border-color: var(--text-secondary);
+        }
+
+        .incident-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .incident-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .incident-title:hover {
+            text-decoration: underline;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-open { background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
+        .badge-closed { background-color: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+
+        .incident-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .incident-body {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            white-space: pre-line;
+        }
+
+        .loading, .no-incidents {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 30px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Cabecera con Logo -->
+        <header>
+            <div class="logo-area">
+                <!-- Cambia 'tu-logo.png' por la ruta de tu logo -->
+                <img src="tu-logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+                <h1>Estado de Servicios</h1>
+            </div>
+            <div id="last-updated" style="font-size: 0.85rem; color: var(--text-secondary);">Actualizando...</div>
+        </header>
+
+        <!-- Banner de Estado Global -->
+        <div id="global-status-banner" class="status-banner">
+            <span id="status-dot" class="status-indicator operational"></span>
+            <span id="status-text">Comprobando estado de los sistemas...</span>
+        </div>
+
+        <!-- Incidencias Activas -->
+        <section>
+            <h2>Incidencias Activas</h2>
+            <div id="active-incidents" class="incident-list">
+                <div class="loading">Cargando incidencias activas...</div>
+            </div>
+        </section>
+
+        <!-- Historial de Incidencias -->
+        <section>
+            <h2>Historial de Incidencias</h2>
+            <div id="historical-incidents" class="incident-list">
+                <div class="loading">Cargando historial...</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN
+        const REPO_OWNER = 'TU_USUARIO_O_ORG'; // Reemplaza con tu usuario u organización
+        const REPO_NAME = 'NOMBRE_DEL_REPOSITORIO'; // Reemplaza con el repo donde están los issues
+        const LABEL = 'global-alert';
+        const GITHUB_TOKEN = ''; // Opcional: pon un token si el repo es privado ('ghp_xxx')
+
+        async function fetchIssues() {
+            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues?labels=${LABEL}&state=all&sort=created&direction=desc`;
+            
+            const headers = {
+                'Accept': 'application/vnd.github.v3+json'
+            };
+            if (GITHUB_TOKEN) {
+                headers['Authorization'] = `token ${GITHUB_TOKEN}`;
+            }
+
+            try {
+                const response = await fetch(url, { headers });
+                if (!response.ok) throw new Error('Error al conectar con la API de GitHub');
+                const issues = await response.json();
+                processIssues(issues);
+            } catch (error) {
+                console.error(error);
+                document.getElementById('active-incidents').innerHTML = `<div class="no-incidents">Error al cargar los datos del monitor.</div>`;
+                document.getElementById('historical-incidents').innerHTML = `<div class="no-incidents">Error al cargar los datos del monitor.</div>`;
+            }
+        }
+
+        function processIssues(issues) {
+            // Filtrar solo los issues reales (la API de GitHub también devuelve pull requests a veces)
+            const realIssues = issues.filter(issue => !issue.pull_request);
+
+            const activeContainer = document.getElementById('active-incidents');
+            const historyContainer = document.getElementById('historical-incidents');
+            const statusBanner = document.getElementById('global-status-banner');
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+
+            const active = realIssues.filter(i => i.state === 'open');
+            const closed = realIssues.filter(i => i.state === 'closed');
+
+            // Actualizar Banner Superior
+            if (active.length > 0) {
+                statusDot.className = 'status-indicator disrupted';
+                statusText.textContent = `Atención: Existen ${active.length} incidencia(s) activa(s) reportada(s).`;
+            } else {
+                statusDot.className = 'status-indicator operational';
+                statusText.textContent = 'Todos los Sistemas Operativos';
+            }
+
+            // Renderizar Activas
+            if (active.length === 0) {
+                activeContainer.innerHTML = `<div class="no-incidents">No hay incidencias activas en este momento. ¡Todo marcha bien!</div>`;
+            } else {
+                activeContainer.innerHTML = active.map(i => createCardHTML(i)).join('');
+            }
+
+            // Renderizar Historial
+            if (closed.length === 0) {
+                historyContainer.innerHTML = `<div class="no-incidents">No hay registros en el historial.</div>`;
+            } else {
+                historyContainer.innerHTML = closed.map(i => createCardHTML(i)).join('');
+            }
+
+            document.getElementById('last-updated').textContent = `Actualizado: ${new Date().toLocaleTimeString()}`;
+        }
+
+        function createCardHTML(issue) {
+            const date = new Date(issue.created_at).toLocaleString('es-ES', {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+            
+            const stateBadge = issue.state === 'open' 
+                ? '<span class="badge badge-open">Activa</span>' 
+                : '<span class="badge badge-closed">Resuelto</span>';
+
+            // Truncar o mostrar la descripción limpia
+            const bodyText = issue.body ? escapeHTML(issue.body) : 'Sin descripción detallada.';
+
+            return `
+                <div class="incident-card">
+                    <div class="incident-header">
+                        <a href="${issue.html_url}" target="_blank" class="incident-title">${escapeHTML(issue.title)}</a>
+                        ${stateBadge}
+                    </div>
+                    <div class="incident-date">Creado el: ${date}</div>
+                    <div class="incident-body">${bodyText}</div>
+                </div>
+            `;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // Ejecutar al cargar y refrescar cada 5 minutos
+        fetchIssues();
+        setInterval(fetchIssues, 300000);
+    </script>
+</body>
+</html>
