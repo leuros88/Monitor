@@ -238,13 +238,13 @@
     </div>
 
     <script>
-        // CONFIGURATION
+        // CONFIGURACIÓN EXACTA
         const REPO_OWNER = 'Leuros88';
         const REPO_NAME = 'Monitor';
         const LABEL = 'global-alert';
-        const GITHUB_TOKEN = ''; // Optional: Add a Personal Access Token if the repo is private
+        const GITHUB_TOKEN = ''; // Opcional si el repo es público
 
-        // Usuarios autorizados cuyas respuestas/comentarios SÍ se mostrarán en la web
+        // Solo se muestran comentarios de este usuario
         const ALLOWED_USERS = ['Leuros88']; 
 
         async function fetchIssues() {
@@ -323,7 +323,6 @@
 
             const bodyText = issue.body ? escapeHTML(issue.body) : 'No detailed description provided.';
 
-            // Filtrar comentarios para mostrar SOLO los de los usuarios permitidos (ej. Leuros88)
             let commentsHTML = '';
             if (issue.resolvedComments && issue.resolvedComments.length > 0) {
                 const filteredComments = issue.resolvedComments.filter(comment => 
