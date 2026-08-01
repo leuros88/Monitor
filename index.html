@@ -244,7 +244,7 @@
         const LABEL = 'global-alert';
         const GITHUB_TOKEN = ''; // Optional: Add a Personal Access Token if the repo is private
 
-        // Lista blanca de usuarios autorizados cuyos comentarios se mostrarán en la web
+        // Usuarios autorizados cuyas respuestas/comentarios SÍ se mostrarán en la web
         const ALLOWED_USERS = ['Leuros88']; 
 
         async function fetchIssues() {
@@ -323,7 +323,7 @@
 
             const bodyText = issue.body ? escapeHTML(issue.body) : 'No detailed description provided.';
 
-            // Filtrar comentarios para mostrar solo los de los usuarios permitidos (ej. Leuros88)
+            // Filtrar comentarios para mostrar SOLO los de los usuarios permitidos (ej. Leuros88)
             let commentsHTML = '';
             if (issue.resolvedComments && issue.resolvedComments.length > 0) {
                 const filteredComments = issue.resolvedComments.filter(comment => 
