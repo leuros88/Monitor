@@ -1,0 +1,94 @@
+name: Update Status Monitor
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+  issue_comment:
+    types: [created, edited, deleted]
+  workflow_dispatch:
+
+jobs:
+  build-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch Issues and Generate JSON
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          REPO_OWNER: "Leuros88"
+          REPO_NAME: "Monitor"
+          TARGET_LABEL: "global-alert"
+          ALLOWED_USER: "Leuros88"
+        run: |
+          # Consultar issues con la etiqueta global-alert
+          ISSUES_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/issues?labels=$TARGET_LABEL&state=all&sort=created&direction=desc"
+          
+          RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ISSUES_URL")
+          
+          # Procesar con node o python para armar el issues.json de forma limpia
+          node -e '
+            const fs = require("fs");
+            const raw = JSON.parse(process.env.RAW_ISSUES || "[]");
+            const allowedUser = process.env.ALLOWED_USER;
+
+            async function processData() {
+              const active = [];
+              const history = [];
+
+              for (const issue of raw) {
+                if (issue.pull_request) continue;
+
+                // Obtener comentarios de cada issue de forma segura con el token
+                const commentsRes = await fetch(issue.comments_url, {
+                  headers: { "Authorization": "token " + process.env.GITHUB_TOKEN, "Accept": "application/vnd.github.v3+json" }
+                });
+                const commentsJson = commentsRes.ok ? await commentsRes.json() : [];
+
+                // Filtrar comentarios para mostrar solo los permitidos (ej. Leuros88)
+                const filteredComments = commentsJson
+                  .filter(c => c.user && c.user.login === allowedUser)
+                  .map(c => ({
+                    user: c.user.login,
+                    created_at: new Date(c.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+                    body: c.body
+                  }));
+
+                const issueObj = {
+                  title: issue.title,
+                  url: issue.html_url,
+                  created_at: new Date(issue.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+                  body: issue.body || "",
+                  comments: filteredComments
+                };
+
+                if (issue.state === "open") {
+                  active.push(issueObj);
+                } else {
+                  history.push(issueObj);
+                }
+              }
+
+              const finalData = {
+                updated_at: new Date().toLocaleTimeString("en-US", { timeStyle: "medium" }) + " (" + new Date().toLocaleDateString() + ")",
+                active,
+                history
+              };
+
+              fs.writeFileSync("issues.json", JSON.stringify(finalData, null, 2));
+            }
+
+            processData();
+          '
+          # Guardar los datos en la variable de entorno para Node
+        shell: bash
+        env:
+          RAW_ISSUES: ${{ steps.fetch.outputs.response }}
+
+      - name: Commit and push changes if issues.json updated
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add issues.json
+          git diff --staged --quiet || (git commit -m "Auto-update status JSON" && git push)
