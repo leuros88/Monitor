@@ -1,19 +1,13 @@
 {
-  "updated_at": "11:31:09 AM (8/1/2026)",
-  "active": [],
-  "history": [
+  "updated_at": "4:52:09 PM (8/1/2026)",
+  "active": [
     {
-      "title": "This is a test.",
-      "url": "https://github.com/leuros88/Monitor/issues/4",
-      "created_at": "Aug 1, 2026, 11:19 AM",
-      "body": "Sorry for this message, I am implementing something. By Leuros88",
-      "comments": [
-        {
-          "user": "leuros88",
-          "created_at": "Aug 1, 2026, 11:31 AM",
-          "body": "@"
-        }
-      ]
+      "title": "Test",
+      "url": "https://github.com/leuros88/Monitor/issues/5",
+      "created_at": "Aug 1, 2026, 4:51 PM",
+      "body": "I am adding a new system. Ignore this message. Sorry for the inconvenience.",
+      "comments": []
     }
-  ]
+  ],
+  "history": []
 }
