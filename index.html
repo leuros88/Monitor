@@ -13,7 +13,6 @@
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --accent-green: #10b981;
-            --accent-yellow: #f59e0b;
             --accent-red: #ef4444;
             --border-color: #334155;
             --comment-bg: #0f172a;
@@ -112,11 +111,6 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 20px;
-            transition: transform 0.2s ease;
-        }
-
-        .incident-card:hover {
-            border-color: var(--text-secondary);
         }
 
         .incident-header {
@@ -161,7 +155,6 @@
             margin-bottom: 15px;
         }
 
-        /* Estilos para los comentarios / respuestas del issue */
         .comments-section {
             margin-top: 15px;
             border-top: 1px solid var(--border-color);
@@ -238,42 +231,13 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN EXACTA
-        const REPO_OWNER = 'Leuros88';
-        const REPO_NAME = 'Monitor';
-        const LABEL = 'global-alert';
-        const GITHUB_TOKEN = ''; // Opcional si el repo es público
-
-        // Solo se muestran comentarios de este usuario
-        const ALLOWED_USERS = ['Leuros88']; 
-
-        async function fetchIssues() {
-            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues?labels=${LABEL}&state=all&sort=created&direction=desc`;
-            
-            const headers = {
-                'Accept': 'application/vnd.github.v3+json'
-            };
-            if (GITHUB_TOKEN) {
-                headers['Authorization'] = `token ${GITHUB_TOKEN}`;
-            }
-
+        async function loadStatus() {
             try {
-                const response = await fetch(url, { headers });
-                if (!response.ok) throw new Error('Failed to connect to GitHub API');
-                const issues = await response.json();
-                
-                const issuesWithComments = await Promise.all(issues.map(async (issue) => {
-                    const commentsUrl = issue.comments_url;
-                    try {
-                        const commResponse = await fetch(commentsUrl, { headers });
-                        const comments = commResponse.ok ? await commResponse.json() : [];
-                        return { ...issue, resolvedComments: comments };
-                    } catch (e) {
-                        return { ...issue, resolvedComments: [] };
-                    }
-                }));
-
-                processIssues(issuesWithComments);
+                // Lee el archivo issues.json localmente sin restricciones de API
+                const response = await fetch('issues.json?t=' + new Date().getTime());
+                if (!response.ok) throw new Error('Could not load issues data.');
+                const data = await response.json();
+                renderStatus(data);
             } catch (error) {
                 console.error(error);
                 document.getElementById('active-incidents').innerHTML = `<div class="no-incidents">Failed to load monitor data.</div>`;
@@ -281,17 +245,16 @@
             }
         }
 
-        function processIssues(issues) {
-            const realIssues = issues.filter(issue => !issue.pull_request);
-
+        function renderStatus(data) {
             const activeContainer = document.getElementById('active-incidents');
             const historyContainer = document.getElementById('historical-incidents');
             const statusDot = document.getElementById('status-dot');
             const statusText = document.getElementById('status-text');
 
-            const active = realIssues.filter(i => i.state === 'open');
-            const closed = realIssues.filter(i => i.state === 'closed');
+            const active = data.active || [];
+            const history = data.history || [];
 
+            // Banner global
             if (active.length > 0) {
                 statusDot.className = 'status-indicator disrupted';
                 statusText.textContent = `Attention: There are ${active.length} active global alert(s) reported.`;
@@ -300,69 +263,52 @@
                 statusText.textContent = 'All Systems Operational';
             }
 
+            // Activas
             activeContainer.innerHTML = active.length === 0 
                 ? `<div class="no-incidents">No active incidents at this time. All systems normal!</div>` 
-                : active.map(i => createCardHTML(i)).join('');
+                : active.map(i => createCardHTML(i, 'open')).join('');
 
-            historyContainer.innerHTML = closed.length === 0 
+            // Historial
+            historyContainer.innerHTML = history.length === 0 
                 ? `<div class="no-incidents">No past incidents recorded in history.</div>` 
-                : closed.map(i => createCardHTML(i)).join('');
+                : history.map(i => createCardHTML(i, 'closed')).join('');
 
-            document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+            document.getElementById('last-updated').textContent = `Last updated: ${data.updated_at || new Date().toLocaleTimeString()}`;
         }
 
-        function createCardHTML(issue) {
-            const date = new Date(issue.created_at).toLocaleString('en-US', {
-                dateStyle: 'medium',
-                timeStyle: 'short'
-            });
-            
-            const stateBadge = issue.state === 'open' 
+        function createCardHTML(incident, state) {
+            const stateBadge = state === 'open' 
                 ? '<span class="badge badge-open">Active</span>' 
                 : '<span class="badge badge-closed">Resolved</span>';
 
-            const bodyText = issue.body ? escapeHTML(issue.body) : 'No detailed description provided.';
-
             let commentsHTML = '';
-            if (issue.resolvedComments && issue.resolvedComments.length > 0) {
-                const filteredComments = issue.resolvedComments.filter(comment => 
-                    comment.user && ALLOWED_USERS.includes(comment.user.login)
-                );
-
-                if (filteredComments.length > 0) {
-                    const commentCards = filteredComments.map(comment => {
-                        const commentDate = new Date(comment.created_at).toLocaleString('en-US', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short'
-                        });
-                        return `
-                            <div class="comment-item">
-                                <div class="comment-header">
-                                    <span><strong>${escapeHTML(comment.user.login)}</strong></span>
-                                    <span>${commentDate}</span>
-                                </div>
-                                <div class="comment-body">${escapeHTML(comment.body)}</div>
-                            </div>
-                        `;
-                    }).join('');
-
-                    commentsHTML = `
-                        <div class="comments-section">
-                            <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Updates / Responses:</div>
-                            ${commentCards}
+            if (incident.comments && incident.comments.length > 0) {
+                const commentCards = incident.comments.map(comment => `
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <span><strong>${escapeHTML(comment.user)}</strong></span>
+                            <span>${escapeHTML(comment.created_at)}</span>
                         </div>
-                    `;
-                }
+                        <div class="comment-body">${escapeHTML(comment.body)}</div>
+                    </div>
+                `).join('');
+
+                commentsHTML = `
+                    <div class="comments-section">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Updates / Responses:</div>
+                        ${commentCards}
+                    </div>
+                `;
             }
 
             return `
                 <div class="incident-card">
                     <div class="incident-header">
-                        <a href="${issue.html_url}" target="_blank" class="incident-title">${escapeHTML(issue.title)}</a>
+                        <a href="${incident.url}" target="_blank" class="incident-title">${escapeHTML(incident.title)}</a>
                         ${stateBadge}
                     </div>
-                    <div class="incident-date">Created on: ${date}</div>
-                    <div class="incident-body">${bodyText}</div>
+                    <div class="incident-date">Created on: ${escapeHTML(incident.created_at)}</div>
+                    <div class="incident-body">${escapeHTML(incident.body)}</div>
                     ${commentsHTML}
                 </div>
             `;
@@ -374,8 +320,7 @@
             );
         }
 
-        fetchIssues();
-        setInterval(fetchIssues, 300000);
+        loadStatus();
     </script>
 </body>
 </html>
