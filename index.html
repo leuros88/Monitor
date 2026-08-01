@@ -244,6 +244,9 @@
         const LABEL = 'global-alert';
         const GITHUB_TOKEN = ''; // Optional: Add a Personal Access Token if the repo is private
 
+        // Lista blanca de usuarios autorizados cuyos comentarios se mostrarán en la web
+        const ALLOWED_USERS = ['Leuros88']; 
+
         async function fetchIssues() {
             const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues?labels=${LABEL}&state=all&sort=created&direction=desc`;
             
@@ -259,7 +262,6 @@
                 if (!response.ok) throw new Error('Failed to connect to GitHub API');
                 const issues = await response.json();
                 
-                // Obtener los comentarios para cada issue de forma asíncrona
                 const issuesWithComments = await Promise.all(issues.map(async (issue) => {
                     const commentsUrl = issue.comments_url;
                     try {
@@ -321,31 +323,37 @@
 
             const bodyText = issue.body ? escapeHTML(issue.body) : 'No detailed description provided.';
 
-            // Generar HTML para las respuestas / comentarios del issue
+            // Filtrar comentarios para mostrar solo los de los usuarios permitidos (ej. Leuros88)
             let commentsHTML = '';
             if (issue.resolvedComments && issue.resolvedComments.length > 0) {
-                const commentCards = issue.resolvedComments.map(comment => {
-                    const commentDate = new Date(comment.created_at).toLocaleString('en-US', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short'
-                    });
-                    return `
-                        <div class="comment-item">
-                            <div class="comment-header">
-                                <span><strong>${escapeHTML(comment.user.login)}</strong></span>
-                                <span>${commentDate}</span>
+                const filteredComments = issue.resolvedComments.filter(comment => 
+                    comment.user && ALLOWED_USERS.includes(comment.user.login)
+                );
+
+                if (filteredComments.length > 0) {
+                    const commentCards = filteredComments.map(comment => {
+                        const commentDate = new Date(comment.created_at).toLocaleString('en-US', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short'
+                        });
+                        return `
+                            <div class="comment-item">
+                                <div class="comment-header">
+                                    <span><strong>${escapeHTML(comment.user.login)}</strong></span>
+                                    <span>${commentDate}</span>
+                                </div>
+                                <div class="comment-body">${escapeHTML(comment.body)}</div>
                             </div>
-                            <div class="comment-body">${escapeHTML(comment.body)}</div>
+                        `;
+                    }).join('');
+
+                    commentsHTML = `
+                        <div class="comments-section">
+                            <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Updates / Responses:</div>
+                            ${commentCards}
                         </div>
                     `;
-                }).join('');
-
-                commentsHTML = `
-                    <div class="comments-section">
-                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Updates / Responses:</div>
-                        ${commentCards}
-                    </div>
-                `;
+                }
             }
 
             return `
