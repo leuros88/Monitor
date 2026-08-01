@@ -1,6 +1,7 @@
 {
-  "updated_at": "9:29:15 AM (8/1/2026)",
-  "active": [
+  "updated_at": "9:30:11 AM (8/1/2026)",
+  "active": [],
+  "history": [
     {
       "title": "test test",
       "url": "https://github.com/leuros88/Monitor/issues/3",
@@ -13,9 +14,7 @@
           "body": "xd"
         }
       ]
-    }
-  ],
-  "history": [
+    },
     {
       "title": "Test",
       "url": "https://github.com/leuros88/Monitor/issues/2",
