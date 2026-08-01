@@ -10,6 +10,8 @@ on:
 jobs:
   build-status:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,11 +26,9 @@ jobs:
         run: |
           ISSUES_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/issues?labels=$TARGET_LABEL&state=all&sort=created&direction=desc"
           
-          # Descargar issues usando el token secreto
           RAW_ISSUES=$(curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ISSUES_URL")
           export RAW_ISSUES
 
-          # Procesar con Node.js integrado en el runner
           node -e '
             const fs = require("fs");
             const raw = JSON.parse(process.env.RAW_ISSUES || "[]");
@@ -47,7 +47,6 @@ jobs:
               for (const issue of raw) {
                 if (issue.pull_request) continue;
 
-                // Obtener comentarios del issue mediante la API de GitHub usando el token
                 let commentsJson = [];
                 try {
                   const commRes = await fetch(issue.comments_url, {
@@ -63,7 +62,6 @@ jobs:
                   console.error("Failed to fetch comments for issue", issue.number);
                 }
 
-                // Filtrar comentarios para mostrar solo los del usuario autorizado (Leuros88)
                 const filteredComments = (Array.isArray(commentsJson) ? commentsJson : [])
                   .filter(c => c.user && c.user.login.toLowerCase() === allowedUser.toLowerCase())
                   .map(c => ({
