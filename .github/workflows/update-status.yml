@@ -22,7 +22,7 @@ jobs:
           REPO_OWNER: "Leuros88"
           REPO_NAME: "Monitor"
           TARGET_LABEL: "global-alert"
-          ALLOWED_USER: "Leuros88"
+          ALLOWED_USERS: "Leuros88, sossinger12-gif"
         run: |
           ISSUES_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/issues?labels=$TARGET_LABEL&state=all&sort=created&direction=desc"
           
@@ -32,7 +32,7 @@ jobs:
           node -e '
             const fs = require("fs");
             const raw = JSON.parse(process.env.RAW_ISSUES || "[]");
-            const allowedUser = process.env.ALLOWED_USER;
+            const allowedUsers = (process.env.ALLOWED_USERS || "Leuros88").split(",").map(u => u.trim().toLowerCase());
             const token = process.env.GITHUB_TOKEN;
 
             async function processData() {
@@ -63,7 +63,7 @@ jobs:
                 }
 
                 const filteredComments = (Array.isArray(commentsJson) ? commentsJson : [])
-                  .filter(c => c.user && c.user.login.toLowerCase() === allowedUser.toLowerCase())
+                  .filter(c => c.user && c.user.login && allowedUsers.includes(c.user.login.toLowerCase()))
                   .map(c => ({
                     user: c.user.login,
                     created_at: new Date(c.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
