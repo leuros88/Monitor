@@ -1,24 +1,5 @@
 {
-  "updated_at": "8:44:48 PM (8/2/2026)",
+  "updated_at": "9:58:15 AM (8/3/2026)",
   "active": [],
-  "history": [
-    {
-      "title": "Test",
-      "url": "https://github.com/leuros88/Monitor/issues/7",
-      "created_at": "Aug 2, 2026, 8:21 PM",
-      "body": "Test",
-      "comments": [
-        {
-          "user": "leuros88",
-          "created_at": "Aug 2, 2026, 8:30 PM",
-          "body": "hello"
-        },
-        {
-          "user": "sossinger12-gif",
-          "created_at": "Aug 2, 2026, 8:37 PM",
-          "body": "Test "
-        }
-      ]
-    }
-  ]
+  "history": []
 }
