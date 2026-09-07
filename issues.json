@@ -1,24 +1,5 @@
 {
-  "updated_at": "11:52:15 AM (8/10/2026)",
+  "updated_at": "6:03:49 PM (8/1/2026)",
   "active": [],
-  "history": [
-    {
-      "title": "Maintenance",
-      "url": "https://github.com/leuros88/Monitor/issues/8",
-      "created_at": "Aug 10, 2026, 9:19 AM",
-      "body": "We are going to perform maintenance on all our websites.\n\nPlease be advised that all requests may take longer to process.\n\nEmail support responses to your inquiries will be delayed.\n\nThe websites may run slower than usual or become temporarily inaccessible.\n\nWe apologize for the inconvenience and will keep you updated on all tasks at:\nhttps://monitor.aerofinancialfse.com/",
-      "comments": [
-        {
-          "user": "leuros88",
-          "created_at": "Aug 10, 2026, 10:59 AM",
-          "body": "Almost there, but I need a machine reboot. Everything's going to go down."
-        },
-        {
-          "user": "leuros88",
-          "created_at": "Aug 10, 2026, 11:52 AM",
-          "body": "Completed with no errors. Sorry for the inconvenience."
-        }
-      ]
-    }
-  ]
+  "history": []
 }
