@@ -1,5 +1,5 @@
 {
-  "updated_at": "5:55:29 PM (9/21/2026)",
+  "updated_at": "7:42:37 PM (9/23/2026)",
   "active": [],
   "history": [
     {
@@ -34,7 +34,13 @@
       "url": "https://github.com/leuros88/Monitor/issues/11",
       "created_at": "Sep 21, 2026, 5:54 PM",
       "body": "Starting on September 22, 2026, the website may experience some downtime over the next few days. This will affect access to financing, ferry services, and emails.\n\nDon't worry! If you are unable to submit requests or payment renewals during this time, we will process everything manually once the site is back online.",
-      "comments": []
+      "comments": [
+        {
+          "user": "leuros88",
+          "created_at": "Sep 23, 2026, 7:42 PM",
+          "body": "We are out of danger (for the moment); we are on the new provider and everything is working correctly. The task is not closed yet and we will investigate tomorrow if everything is running smoothly."
+        }
+      ]
     }
   ],
   "info_history": []
