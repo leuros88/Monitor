@@ -1,5 +1,5 @@
 {
-  "updated_at": "5:55:29 PM (9/21/2026)",
+  "updated_at": "10:25:23 AM (9/26/2026)",
   "active": [],
   "history": [
     {
@@ -28,14 +28,26 @@
       "created_at": "Sep 21, 2026, 5:55 PM",
       "body": " Our server provider has informed us that they will be performing maintenance on September 30, 2026, from 6:00 AM UTC to 2:00 PM UTC. There may be some server instability during this time.",
       "comments": []
-    },
+    }
+  ],
+  "info_history": [
     {
       "title": "We need to transfer our domain, aerofinancialfse.com, to a new hosting provider.",
       "url": "https://github.com/leuros88/Monitor/issues/11",
       "created_at": "Sep 21, 2026, 5:54 PM",
       "body": "Starting on September 22, 2026, the website may experience some downtime over the next few days. This will affect access to financing, ferry services, and emails.\n\nDon't worry! If you are unable to submit requests or payment renewals during this time, we will process everything manually once the site is back online.",
-      "comments": []
+      "comments": [
+        {
+          "user": "leuros88",
+          "created_at": "Sep 23, 2026, 7:42 PM",
+          "body": "We are out of danger (for the moment); we are on the new provider and everything is working correctly. The task is not closed yet and we will investigate tomorrow if everything is running smoothly."
+        },
+        {
+          "user": "leuros88",
+          "created_at": "Sep 26, 2026, 10:25 AM",
+          "body": "Looks like everything is working fine with no issues."
+        }
+      ]
     }
-  ],
-  "info_history": []
+  ]
 }
