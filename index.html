@@ -121,9 +121,10 @@
             box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.5);
         }
 
-        .status-banner.operational { border-color: rgba(52, 211, 153, 0.4); }
-        .status-banner.disrupted { border-color: rgba(248, 113, 113, 0.4); }
-        .status-banner.warning { border-color: rgba(251, 191, 36, 0.45); }
+        .status-banner.operational { border-color: rgba(52, 211, 153, 0.4); color: var(--text-primary); }
+        .status-banner.disrupted { border-color: rgba(248, 113, 113, 0.4); color: var(--text-primary); }
+
+        #status-text { color: var(--text-primary); }
 
         .status-indicator {
             width: 14px;
@@ -132,9 +133,8 @@
             flex-shrink: 0;
         }
 
-        .operational { background-color: var(--green); box-shadow: 0 0 0 5px var(--green-bg), 0 0 14px var(--green); }
-        .disrupted { background-color: var(--red); box-shadow: 0 0 0 5px var(--red-bg), 0 0 14px var(--red); animation: pulse 1.6s infinite; }
-        .warning { background-color: var(--amber); box-shadow: 0 0 0 5px var(--amber-bg), 0 0 14px var(--amber); }
+        .status-indicator.operational { background-color: var(--green); box-shadow: 0 0 0 5px var(--green-bg), 0 0 14px var(--green); }
+        .status-indicator.disrupted { background-color: var(--red); box-shadow: 0 0 0 5px var(--red-bg), 0 0 14px var(--red); animation: pulse 1.6s infinite; }
 
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
@@ -219,7 +219,6 @@
 
         .dot.active { background: var(--red); box-shadow: 0 0 8px var(--red); }
         .dot.history { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
-        .dot.info { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
 
         .incident-list {
             display: flex;
@@ -390,7 +389,6 @@
             <div class="counts">
                 <span class="count-chip">Active: <span id="count-active" class="num">0</span></span>
                 <span class="count-chip">History: <span id="count-history" class="num">0</span></span>
-                <span class="count-chip">Info: <span id="count-info" class="num">0</span></span>
             </div>
         </div>
 
@@ -401,16 +399,6 @@
             </div>
             <div id="active-incidents" class="incident-list">
                 <div class="loading">Loading active incidents...</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">
-                <span class="dot info"></span>
-                Information
-            </div>
-            <div id="info-incidents" class="incident-list">
-                <div class="loading">Loading information notices...</div>
             </div>
         </div>
 
@@ -448,7 +436,6 @@
                 console.error(error);
                 document.getElementById('active-incidents').innerHTML = `<div class="no-incidents">Failed to load monitor data.</div>`;
                 document.getElementById('historical-incidents').innerHTML = `<div class="no-incidents">Failed to load monitor data.</div>`;
-                document.getElementById('info-incidents').innerHTML = `<div class="no-incidents">Failed to load monitor data.</div>`;
             }
         }
 
@@ -465,54 +452,48 @@
         function renderStatus(data, query) {
             const activeContainer = document.getElementById('active-incidents');
             const historyContainer = document.getElementById('historical-incidents');
-            const infoContainer = document.getElementById('info-incidents');
             const statusBanner = document.getElementById('global-status-banner');
             const statusDot = document.getElementById('status-dot');
             const statusText = document.getElementById('status-text');
 
-            const active = (data.active || []).filter(i => matches(i, query));
-            // "info" label: visible only on this page, never affects plugins/Discord (banner shows orange, never red).
+            const globalActive = (data.active || []).filter(i => matches(i, query));
+            // "info" issues are treated as active incidents on this page (amber "Info" badge),
+            // but stay in separate JSON keys so plugins/Discord keep reading only global-alert.
             const infoActive = (data.info_active || []).filter(i => matches(i, query));
-            // Resolved information notices move to Incident History, not the Information block.
+            const activeCards = [
+                ...globalActive.map(i => ({ incident: i, state: 'open' })),
+                ...infoActive.map(i => ({ incident: i, state: 'info' }))
+            ].sort((a, b) => new Date(b.incident.created_at) - new Date(a.incident.created_at));
+            // Resolved information notices live in Incident History.
             const resolvedInfo = (data.info_history || []).filter(i => matches(i, query));
             const globalHistory = (data.history || []).filter(i => matches(i, query));
             const history = [...globalHistory, ...resolvedInfo].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            document.getElementById('count-active').textContent = active.length;
+            document.getElementById('count-active').textContent = globalActive.length + infoActive.length;
             document.getElementById('count-history').textContent = history.length;
-            document.getElementById('count-info').textContent = infoActive.length;
 
-            // Banner: red only for global-alert; orange for open information notices; green otherwise.
-            const globalActiveCount = (data.active || []).length;
-            const infoActiveCount = (data.info_active || []).length;
-            if (globalActiveCount > 0) {
+            // Banner: red when there is any active incident or notice; green otherwise.
+            const totalActiveCount = (data.active || []).length + (data.info_active || []).length;
+            if (totalActiveCount > 0) {
                 statusBanner.className = 'status-banner disrupted';
                 statusDot.className = 'status-indicator disrupted';
-                statusText.textContent = `Attention: There ${globalActiveCount === 1 ? 'is' : 'are'} ${globalActiveCount} active platform alert(s).`;
-            } else if (infoActiveCount > 0) {
-                statusBanner.className = 'status-banner warning';
-                statusDot.className = 'status-indicator warning';
-                statusText.textContent = `There are some notices related to our system (${infoActiveCount} active).`;
+                statusText.textContent = `Attention: There ${totalActiveCount === 1 ? 'is' : 'are'} ${totalActiveCount} active platform alert(s).`;
             } else {
                 statusBanner.className = 'status-banner operational';
                 statusDot.className = 'status-indicator operational';
                 statusText.textContent = 'All Systems Operational';
             }
 
-            activeContainer.innerHTML = active.length === 0
+            activeContainer.innerHTML = activeCards.length === 0
                 ? `<div class="no-incidents">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                         <span>${query ? 'No active incidents match your search.' : '<span class="status-ok">No active incidents. All systems normal!</span>'}</span>
                     </div>`
-                : active.map(i => createCardHTML(i, 'open')).join('');
+                : activeCards.map(c => createCardHTML(c.incident, c.state)).join('');
 
             historyContainer.innerHTML = history.length === 0
                 ? `<div class="no-incidents">${query ? 'No history records match your search.' : 'No past incidents recorded in history.'}</div>`
                 : history.map(i => createCardHTML(i, 'closed')).join('');
-
-            infoContainer.innerHTML = infoActive.length === 0
-                ? `<div class="no-incidents">${query ? 'No information notices match your search.' : 'No information notices at the moment.'}</div>`
-                : infoActive.map(i => createCardHTML(i, 'info')).join('');
         }
 
         function createCardHTML(incident, state) {
