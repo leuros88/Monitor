@@ -123,6 +123,7 @@
 
         .status-banner.operational { border-color: rgba(52, 211, 153, 0.4); }
         .status-banner.disrupted { border-color: rgba(248, 113, 113, 0.4); }
+        .status-banner.warning { border-color: rgba(251, 191, 36, 0.45); }
 
         .status-indicator {
             width: 14px;
@@ -133,6 +134,7 @@
 
         .operational { background-color: var(--green); box-shadow: 0 0 0 5px var(--green-bg), 0 0 14px var(--green); }
         .disrupted { background-color: var(--red); box-shadow: 0 0 0 5px var(--red-bg), 0 0 14px var(--red); animation: pulse 1.6s infinite; }
+        .warning { background-color: var(--amber); box-shadow: 0 0 0 5px var(--amber-bg), 0 0 14px var(--amber); }
 
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
@@ -469,22 +471,28 @@
             const statusText = document.getElementById('status-text');
 
             const active = (data.active || []).filter(i => matches(i, query));
-            const history = (data.history || []).filter(i => matches(i, query));
-            // "info" label: visible only on this page, never affects banner/plugins/Discord.
+            // "info" label: visible only on this page, never affects plugins/Discord (banner shows orange, never red).
             const infoActive = (data.info_active || []).filter(i => matches(i, query));
-            const infoHistory = (data.info_history || []).filter(i => matches(i, query));
-            const infoAll = [...infoActive, ...infoHistory];
+            // Resolved information notices move to Incident History, not the Information block.
+            const resolvedInfo = (data.info_history || []).filter(i => matches(i, query));
+            const globalHistory = (data.history || []).filter(i => matches(i, query));
+            const history = [...globalHistory, ...resolvedInfo].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             document.getElementById('count-active').textContent = active.length;
             document.getElementById('count-history').textContent = history.length;
-            document.getElementById('count-info').textContent = infoAll.length;
+            document.getElementById('count-info').textContent = infoActive.length;
 
-            // Banner depends ONLY on global-alert (data.active), info never turns it red.
+            // Banner: red only for global-alert; orange for open information notices; green otherwise.
             const globalActiveCount = (data.active || []).length;
+            const infoActiveCount = (data.info_active || []).length;
             if (globalActiveCount > 0) {
                 statusBanner.className = 'status-banner disrupted';
                 statusDot.className = 'status-indicator disrupted';
                 statusText.textContent = `Attention: There ${globalActiveCount === 1 ? 'is' : 'are'} ${globalActiveCount} active platform alert(s).`;
+            } else if (infoActiveCount > 0) {
+                statusBanner.className = 'status-banner warning';
+                statusDot.className = 'status-indicator warning';
+                statusText.textContent = `There are some notices related to our system (${infoActiveCount} active).`;
             } else {
                 statusBanner.className = 'status-banner operational';
                 statusDot.className = 'status-indicator operational';
@@ -502,9 +510,9 @@
                 ? `<div class="no-incidents">${query ? 'No history records match your search.' : 'No past incidents recorded in history.'}</div>`
                 : history.map(i => createCardHTML(i, 'closed')).join('');
 
-            infoContainer.innerHTML = infoAll.length === 0
+            infoContainer.innerHTML = infoActive.length === 0
                 ? `<div class="no-incidents">${query ? 'No information notices match your search.' : 'No information notices at the moment.'}</div>`
-                : infoActive.map(i => createCardHTML(i, 'info')).join('') + infoHistory.map(i => createCardHTML(i, 'closed')).join('');
+                : infoActive.map(i => createCardHTML(i, 'info')).join('');
         }
 
         function createCardHTML(incident, state) {
