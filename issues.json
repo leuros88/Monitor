@@ -1,6 +1,14 @@
 {
-  "updated_at": "10:37:58 AM (9/26/2026)",
-  "active": [],
+  "updated_at": "5:53:13 PM (9/27/2026)",
+  "active": [
+    {
+      "title": "Database issues.",
+      "url": "https://github.com/leuros88/Monitor/issues/13",
+      "created_at": "Sep 27, 2026, 5:53 PM",
+      "body": "We are experiencing some issues with our server's database. Please stand by, we will try to fix this as soon as possible.",
+      "comments": []
+    }
+  ],
   "history": [
     {
       "title": "Maintenance",
