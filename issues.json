@@ -1,5 +1,5 @@
 {
-  "updated_at": "6:05:42 PM (9/27/2026)",
+  "updated_at": "1:12:47 PM (9/30/2026)",
   "active": [],
   "history": [
     {
@@ -34,16 +34,21 @@
       ]
     }
   ],
-  "info_active": [
+  "info_active": [],
+  "info_history": [
     {
       "title": "Maintenance on September 30, 2026",
       "url": "https://github.com/leuros88/Monitor/issues/12",
       "created_at": "Sep 21, 2026, 5:55 PM",
       "body": " Our server provider has informed us that they will be performing maintenance on September 30, 2026, from 6:00 AM UTC to 2:00 PM UTC. There may be some server instability during this time.",
-      "comments": []
-    }
-  ],
-  "info_history": [
+      "comments": [
+        {
+          "user": "leuros88",
+          "created_at": "Sep 30, 2026, 1:12 PM",
+          "body": "Our company has completed maintenance, and everything is running normally. We were not affected."
+        }
+      ]
+    },
     {
       "title": "We need to transfer our domain, aerofinancialfse.com, to a new hosting provider.",
       "url": "https://github.com/leuros88/Monitor/issues/11",
